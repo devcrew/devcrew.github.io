@@ -1,0 +1,12 @@
+<!doctype html>
+<html>
+<body>
+On publishing a Visual Studio 2019 project with ClickOnce it threw a new error of the publish stating "Invalid algorithm specified:.  The publisher uses a self signed code signing certificate that was still valid.  However, on reviewing it the certificate was using has algorithm SHA1 and my suspicion was that VS2019 or Windows 10 would not accept an insecure certificate.  So I looked into ways to create a new code signing certificate and couldn't find a conclusive resource.  After reading a lot of web page I came up with the following Powershell concoction to get the security I thought I wanted/needed.
+Use Powershell version 5 to create a self signed code signing certificate with hash algorithm SHA256, key algorithm RSA, and a key length of 4096
+<code>$certificate = New-SelfSignedCertificate -Type CodeSigningCert -HashAlgorithm "SHA256" -KeyAlgorithm "RSA" -KeyLength 4096 -KeyUsage DigitalSignature -KeySpec Signature -FriendlyName "Your friendly name" -Subject CN="Your subject" -KeyExportPolicy ExportableEncrypted -CertStoreLocation Cert:\CurrentUser\My -NotAfter (Get-Date).AddYears(5) -TextExtension @('2.5.29.37={text}1.3.6.1.5.5.7.3.3') -Provider "Microsoft Enhanced RSA and AES Cryptographic Provider" </code>
+Export the certificate to a PFX file by creating a Powershell secure password and setting it to a variable, or use the Secure-String function in the export-pfxcertificate function.
+<code>$pfxPassword = convertto-securestring -string "your password" -force -asplaintext</code>
+<code>$certificate |export-pfxcertificate -password $pfxPassword -filepath .\file-name.pfx</code>
+<a href="https://docs.microsoft.com/en-us/windows/win32/seccertenroll/cryptoapi-cryptographic-service-providers">Which crypto provider to use to get SHA256?</a> Go with "Microsoft Enhanced RSA and AES Cryptographic Provider".
+</body>
+</html>
